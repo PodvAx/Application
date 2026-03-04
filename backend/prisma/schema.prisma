@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+  participations Participation[]
+
+  @@map("users")
+}
+
+model Event {
+  id String @id @default(uuid())
+  title String
+  description String
+  location String
+  date DateTime
+  capacity Int?
+  isPublic Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creator User @relation(fields: [creatorId], references: [id])
+  creatorId String
+  participants Participation[]
+
+  @@map("events")
+}
+
+model Participation {
+  id String @id @default(uuid())
+  userId String
+  eventId String
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+  @@map("participations")
+}
