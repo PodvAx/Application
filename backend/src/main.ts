@@ -1,16 +1,20 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as dotenv from 'dotenv';
-import { ValidationPipe } from '@nestjs/common';
-
-dotenv.config();
-
-const { PORT } = process.env;
-
-const CLIENT_ORIGIN = 'https://localhost:5173';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const configService = app.get(ConfigService);
+
+  const PORT = configService.get<number>('PORT', 8080);
+  const CLIENT_ORIGIN = configService.getOrThrow<string>('CLIENT_ORIGIN');
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  app.use(cookieParser());
 
   app.enableCors({
     origin: CLIENT_ORIGIN,
@@ -27,10 +31,11 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(PORT ?? 3000);
+  await app.listen(PORT);
+  return { PORT };
 }
 bootstrap()
-  .then(() => {
+  .then(({ PORT }) => {
     console.log(`app is running on ${PORT}`);
   })
   .catch(() => {
