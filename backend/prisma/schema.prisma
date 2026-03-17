@@ -10,11 +10,12 @@ datasource db {
 model User {
   id String @id @default(uuid())
   email String @unique
-  password String
+  passwordHash String
   name String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isVerifiedEmail Boolean @default(false)
+  refreshTokenHash String?
 
   events Event[]
   participations Participation[]

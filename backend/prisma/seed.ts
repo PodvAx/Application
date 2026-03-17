@@ -4,7 +4,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
 import { users } from './data/users.data';
 import { events } from './data/events.data';
-import { hashPassword } from './utils/hash';
+import { getHashedPassword } from './utils/hash';
 
 const { DATABASE_URL } = process.env;
 
@@ -17,8 +17,9 @@ async function main() {
   await prisma.$transaction(async (tx) => {
     const preparedUsers = await Promise.all(
       users.map(async (user) => ({
-        ...user,
-        password: await hashPassword(user.password),
+        name: user.name,
+        passwordHash: await getHashedPassword(user.password),
+        email: user.email,
       })),
     );
 

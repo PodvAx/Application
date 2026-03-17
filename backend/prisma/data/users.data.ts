@@ -1,12 +1,12 @@
 export const users = [
   {
     email: 'test@gmail.com',
-    password: '12345',
+    password: '12345678',
     name: 'test',
   },
   {
     email: 'admin@ukr.net',
-    password: 'admin',
+    password: 'adminadmin',
     name: 'admin',
   },
   {
