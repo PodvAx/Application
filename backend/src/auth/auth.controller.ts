@@ -1,7 +1,7 @@
 import { Body, Controller, Patch, Post, Query, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
-import { CreateUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
+import { RegisterUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
 import { ActivateQueryDto } from './dto/activate-query.dto';
 
 @Controller('auth')
@@ -9,7 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() dto: CreateUserDto) {
+  async register(@Body() dto: RegisterUserDto) {
     return this.authService.register(dto);
   }
 

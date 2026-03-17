@@ -1,7 +1,7 @@
 import { OmitType } from '@nestjs/mapped-types';
 import { IsAlphanumeric, IsEmail, IsString, MinLength } from 'class-validator';
 
-export class CreateUserDto {
+export class RegisterUserDto {
   @IsEmail()
   email: string;
 
@@ -14,4 +14,6 @@ export class CreateUserDto {
   name: string;
 }
 
-export class LoginUserDto extends OmitType(CreateUserDto, ['name'] as const) {}
+export class LoginUserDto extends OmitType(RegisterUserDto, [
+  'name',
+] as const) {}

@@ -38,6 +38,6 @@ bootstrap()
   .then(({ PORT }) => {
     console.log(`app is running on ${PORT}`);
   })
-  .catch(() => {
-    console.log('something went wrong');
+  .catch((err) => {
+    console.log('something went wrong', err);
   });

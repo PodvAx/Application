@@ -8,7 +8,10 @@ export class UserDto implements Partial<UserModel> {
   isVerifiedEmail: boolean;
 
   @Exclude()
-  password: string;
+  passwordHash: string;
+
+  @Exclude()
+  refreshTokenHash?: string | null | undefined;
 
   @Exclude()
   createdAt: Date;

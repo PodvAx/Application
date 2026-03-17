@@ -8,10 +8,10 @@ import {
 import { TokenService } from 'src/token/token.service';
 import { UsersService } from 'src/users/users.service';
 import { MailService } from 'src/mail/mail.service';
-import { getHashedPassword, isPasswordCorrect } from './utils/hash';
+import { isPasswordCorrect } from '../users/utils/hash';
 import { PayloadEnum } from 'src/token/utils/types';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
+import { RegisterUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,8 +22,17 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async register(dto: CreateUserDto) {
-    const { email, password, name } = dto;
+  // TODO
+  /* 
+  - response the same for different variants
+  - if user exist and email verified: response check your email
+  - if user exist and email is not verified: response check your email
+  - if user don't exist: create user and response with chek you email
+  - check JWT expiration and do something when user forgot to activate his account.
+  - 
+  */
+  async register(dto: RegisterUserDto) {
+    const { email, name } = dto;
 
     const existedUser = await this.usersService.findByEmail(email);
 
@@ -31,15 +40,7 @@ export class AuthService {
       throw new ConflictException('This email already taken.');
     }
 
-    const hashedPassword = await getHashedPassword(
-      password,
-      +this.configService.get('SALT_ROUNDS', 8),
-    );
-
-    const newUser = await this.usersService.createOrUpdate({
-      ...dto,
-      password: hashedPassword,
-    });
+    const newUser = await this.usersService.createOrUpdate(dto);
 
     const token = this.tokenService.createEmailVerificationToken(
       newUser.id,
@@ -67,15 +68,18 @@ export class AuthService {
     }
 
     try {
-      const updatedUser = await this.usersService.verifyEmail(payload.email);
+      const {
+        id: userId,
+        email,
+        name,
+      } = await this.usersService.verifyEmail(payload.email);
 
-      const { accessToken, refreshToken } = this.getAuthTokens(
-        updatedUser.id,
-        updatedUser.email,
-      );
+      const { accessToken, refreshToken } = this.getAuthTokens(userId, email);
+
+      await this.usersService.updateRefresh(userId, refreshToken);
 
       this.mailService
-        .sendSuccessVerificationEmail(updatedUser.email, updatedUser.name)
+        .sendSuccessVerificationEmail(email, name)
         .catch((err) => console.error('Delayed Mail Error:', err));
 
       return { accessToken, refreshToken };
@@ -93,7 +97,11 @@ export class AuthService {
   async login({ email, password }: LoginUserDto) {
     const user = await this.usersService.findForAuth(email);
 
-    if (!user || !(await isPasswordCorrect(password, user.password))) {
+    const passwordHash = user?.passwordHash || '$2b$10$invalidhashplaceholder';
+
+    const isValidPassword = await isPasswordCorrect(password, passwordHash);
+
+    if (!user || !isValidPassword) {
       throw new UnauthorizedException({
         message: 'Email or password is incorrect',
       });
@@ -106,7 +114,14 @@ export class AuthService {
       });
     }
 
-    return this.getAuthTokens(user.id, user.email);
+    const { accessToken, refreshToken } = this.getAuthTokens(
+      user.id,
+      user.email,
+    );
+
+    await this.usersService.updateRefresh(user.id, refreshToken);
+
+    return { accessToken, refreshToken };
   }
 
   getAuthTokens(userId: string, email: string) {
