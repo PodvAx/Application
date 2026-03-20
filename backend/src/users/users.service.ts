@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { plainToInstance } from 'class-transformer';
-import { UserDto } from 'src/common/dtos/user.dto';
 import { RegisterUserDto } from 'src/common/dtos/create-user.dto';
-import { getHashedPassword, getHashedToken } from './utils/hash';
+import { getHashedPassword, getHashedToken } from '../common/utils/hash';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -16,7 +14,7 @@ export class UsersService {
   async findAll() {
     const users = await this.prisma.user.findMany({});
 
-    return users.map((user) => plainToInstance(UserDto, user));
+    return users;
   }
 
   async findByEmail(email: string) {
@@ -26,7 +24,7 @@ export class UsersService {
       },
     });
 
-    return plainToInstance(UserDto, user);
+    return user;
   }
 
   async findById(id: string) {
@@ -34,7 +32,7 @@ export class UsersService {
       where: { id },
     });
 
-    return plainToInstance(UserDto, user);
+    return user;
   }
 
   async createOrUpdate(dto: RegisterUserDto) {
@@ -55,7 +53,7 @@ export class UsersService {
       create: data,
     });
 
-    return plainToInstance(UserDto, user);
+    return user;
   }
 
   async verifyEmail(email: string) {
@@ -68,15 +66,7 @@ export class UsersService {
       },
     });
 
-    return plainToInstance(UserDto, updatedUser);
-  }
-
-  async findForAuth(email: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    return updatedUser;
   }
 
   async updateRefresh(userId: string, refreshToken: string) {
@@ -87,6 +77,34 @@ export class UsersService {
       },
       data: {
         refreshTokenHash,
+      },
+    });
+  }
+
+  async deleteRefresh(userId: string) {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+        refreshTokenHash: { not: null },
+      },
+      data: {
+        refreshTokenHash: null,
+      },
+    });
+  }
+
+  async updatePassword(email: string, newPassword: string) {
+    const hashedPassword = await getHashedPassword(
+      newPassword,
+      this.configService.get('SALT_ROUNDS', 10),
+    );
+
+    await this.prisma.user.update({
+      where: {
+        email,
+      },
+      data: {
+        passwordHash: hashedPassword,
       },
     });
   }

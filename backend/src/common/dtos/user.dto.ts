@@ -11,7 +11,7 @@ export class UserDto implements Partial<UserModel> {
   passwordHash: string;
 
   @Exclude()
-  refreshTokenHash?: string | null | undefined;
+  refreshTokenHash?: string | null;
 
   @Exclude()
   createdAt: Date;

@@ -1,8 +1,25 @@
-import { Body, Controller, Patch, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
-import { RegisterUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
+import {
+  RegisterUserDto,
+  LoginUserDto,
+  ForgotPasswordDto,
+} from 'src/common/dtos/create-user.dto';
 import { ActivateQueryDto } from './dto/activate-query.dto';
+import { RtAuthGuard } from './guards/refresh-jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { ResetQueryDto } from './dto/reset-query.dto';
+import { ResetPasswordDto } from 'src/common/dtos/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -13,7 +30,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @Patch('activate')
+  @Post('activate')
   async activate(
     @Query() query: ActivateQueryDto,
     @Res({ passthrough: true }) response: Response,
@@ -36,6 +53,51 @@ export class AuthController {
 
     response.cookie('refreshToken', refreshToken, { httpOnly: true });
 
-    return { accessToken, refreshToken };
+    return { accessToken };
+  }
+
+  @UseGuards(RtAuthGuard)
+  @Get('refresh')
+  async refresh(
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('refreshToken') refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken: newRT } =
+      await this.authService.refreshTokens(userId, refreshToken);
+
+    res.cookie('refreshToken', newRT, { httpOnly: true });
+
+    return { accessToken };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(
+    @CurrentUser('sub') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(userId);
+    res.clearCookie('refreshToken');
+    return { message: 'Logged out successfully' };
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Query() query: ResetQueryDto,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    await this.authService.resetPassword(
+      query.token,
+      dto.newPassword,
+      dto.confirmPassword,
+    );
+
+    return { message: 'Your password successfully reset' };
   }
 }

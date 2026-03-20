@@ -6,7 +6,8 @@ import {
   EmailVerificationPayload,
   PayloadEnum,
   RefreshPayload,
-} from 'src/token/utils/types';
+  ResetPayload,
+} from 'src/common/types/token-payload.type';
 
 @Injectable()
 export class TokenService {
@@ -81,6 +82,30 @@ export class TokenService {
     try {
       return this.jwt.verify<RefreshPayload>(token, {
         secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  createResetToken(userId: string, email: string) {
+    return this.jwt.sign(
+      {
+        sub: userId,
+        email: email,
+        type: PayloadEnum.reset,
+      },
+      {
+        secret: this.configService.getOrThrow('JWT_RESET_SECRET'),
+        expiresIn: '30m',
+      },
+    );
+  }
+
+  verifyResetToken(token: string): ResetPayload | null {
+    try {
+      return this.jwt.verify<ResetPayload>(token, {
+        secret: this.configService.getOrThrow('JWT_RESET_SECRET'),
       });
     } catch {
       return null;

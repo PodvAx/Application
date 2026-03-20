@@ -3,15 +3,17 @@ import {
   ConflictException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { TokenService } from 'src/token/token.service';
 import { UsersService } from 'src/users/users.service';
 import { MailService } from 'src/mail/mail.service';
-import { isPasswordCorrect } from '../users/utils/hash';
-import { PayloadEnum } from 'src/token/utils/types';
+import { isPasswordCorrect } from '../common/utils/hash';
+import { PayloadEnum } from 'src/common/types/token-payload.type';
 import { ConfigService } from '@nestjs/config';
 import { RegisterUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +53,9 @@ export class AuthService {
       .sendActivationEmail(email, token, name)
       .catch((err) => console.error('Delayed Mail Error:', err));
 
-    return { newUser, message: 'Check your mail for activation link' };
+    return {
+      message: 'Check your mail for activation link',
+    };
   }
 
   async activate(activationToken: string) {
@@ -95,7 +99,7 @@ export class AuthService {
   }
 
   async login({ email, password }: LoginUserDto) {
-    const user = await this.usersService.findForAuth(email);
+    const user = await this.usersService.findByEmail(email);
 
     const passwordHash = user?.passwordHash || '$2b$10$invalidhashplaceholder';
 
@@ -129,5 +133,80 @@ export class AuthService {
     const refreshToken = this.tokenService.createRefreshToken(userId, email);
 
     return { accessToken, refreshToken };
+  }
+
+  async refreshTokens(userId: string, refreshToken: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const { refreshTokenHash, email } = user;
+
+    const isValidRefreshToken = await bcrypt.compare(
+      refreshToken,
+      refreshTokenHash || 'some encrypted value',
+    );
+
+    if (!isValidRefreshToken) {
+      throw new UnauthorizedException();
+    }
+
+    const { accessToken, refreshToken: newRT } = this.getAuthTokens(
+      userId,
+      email,
+    );
+
+    await this.usersService.updateRefresh(userId, newRT);
+
+    return { accessToken, refreshToken: newRT };
+  }
+
+  async logout(userId: string) {
+    await this.usersService.deleteRefresh(userId);
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('There is no user with such email');
+    }
+
+    const resetToken = this.tokenService.createResetToken(user.id, email);
+
+    await this.mailService.sendResetPasswordEmail(email, resetToken, user.name);
+
+    return { message: 'Check your email for reset password link' };
+  }
+
+  async resetPassword(
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
+    const payload = this.tokenService.verifyResetToken(resetToken);
+
+    if (
+      !payload ||
+      !payload.email ||
+      !payload.sub ||
+      !payload.type ||
+      payload.type !== PayloadEnum.reset
+    ) {
+      throw new UnauthorizedException();
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException();
+    }
+
+    const updatedUser = await this.usersService.updatePassword(
+      payload.email,
+      newPassword,
+    );
+
+    return updatedUser;
   }
 }

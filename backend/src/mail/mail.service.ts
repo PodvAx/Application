@@ -42,4 +42,23 @@ export class MailService {
       );
     }
   }
+
+  async sendResetPasswordEmail(email: string, token: string, name: string) {
+    const CLIENT_ORIGIN =
+      this.configService.getOrThrow<string>('CLIENT_ORIGIN');
+    const link = `${CLIENT_ORIGIN}/reset-password/?token=${token}`;
+
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Reset your password in Application by Podvax',
+        template: './reset-password',
+        context: { name, link },
+      });
+    } catch (err) {
+      throw new BadGatewayException(
+        `Something went wrong with sending email. Error: ${err}`,
+      );
+    }
+  }
 }

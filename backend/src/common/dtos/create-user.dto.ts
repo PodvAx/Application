@@ -1,4 +1,4 @@
-import { OmitType } from '@nestjs/mapped-types';
+import { OmitType, PickType } from '@nestjs/mapped-types';
 import { IsAlphanumeric, IsEmail, IsString, MinLength } from 'class-validator';
 
 export class RegisterUserDto {
@@ -16,4 +16,8 @@ export class RegisterUserDto {
 
 export class LoginUserDto extends OmitType(RegisterUserDto, [
   'name',
+] as const) {}
+
+export class ForgotPasswordDto extends PickType(RegisterUserDto, [
+  'email',
 ] as const) {}
