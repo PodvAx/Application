@@ -8,9 +8,14 @@ type FormFieldProps = {
   children: React.ReactNode;
 };
 
-const FormField: React.FC<FormFieldProps> = ({ label, error, children }) => {
+const FormField: React.FC<FormFieldProps> = ({
+  label,
+  error,
+  children,
+  htmlFor,
+}) => {
   return (
-    <label htmlFor="email" className="relative flex flex-col gap-2">
+    <label htmlFor={htmlFor} className="relative flex flex-col gap-2">
       <span className="text-sm font-semibold text-gray-700">{label}</span>
       {children}
       {error && (
