@@ -14,6 +14,8 @@ import { PayloadEnum } from 'src/common/types/token-payload.type';
 import { ConfigService } from '@nestjs/config';
 import { RegisterUserDto, LoginUserDto } from 'src/common/dtos/create-user.dto';
 import bcrypt from 'bcrypt';
+import { UserDto } from 'src/common/dtos/user.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -208,5 +210,15 @@ export class AuthService {
     );
 
     return updatedUser;
+  }
+
+  async getMe(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return plainToInstance(UserDto, user);
   }
 }

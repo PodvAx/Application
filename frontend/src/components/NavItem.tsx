@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import type { NavItemProps } from '../types/nav-item-props';
 import { button } from './variants/button';
+import type { NavItemProps } from '../utils/types';
 
 const NavItem: React.FC<NavItemProps> = ({
   to,

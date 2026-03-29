@@ -41,3 +41,7 @@ export const registerSchema = z.object({
   password: passwordSchema,
   name: nameSchema,
 });
+
+export const activateSchema = z.object({
+  token: z.jwt(),
+});

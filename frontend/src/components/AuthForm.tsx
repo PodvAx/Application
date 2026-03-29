@@ -1,95 +1,58 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import z from 'zod';
 import FormField from './FormField';
 import Input from './Input';
 import Button from './Button';
 import { Link } from 'react-router-dom';
+import type {
+  FieldErrors,
+  FieldValues,
+  UseFormRegister,
+} from 'react-hook-form';
 
-interface Field<T> {
+interface AuthField<T> {
   label: string;
   name: keyof T;
-  type?: string;
+  type: string;
   autocomplete?: string;
   placeholder?: string;
 }
 
-type AuthFormProps<T> = {
+type AuthFormProps<T extends FieldValues> = {
   title: string;
   onSubmit: (data: any) => void;
-  fields: Field<T>[];
+  fields: AuthField<T>[];
   authType: 'login' | 'register';
+  register: UseFormRegister<T>;
+  errors?: FieldErrors<T>;
 };
 
-const loginSchema = z.object({
-  email: z
-    .email({ message: 'Invalid email address' })
-    .min(1, { message: 'Email is required' }),
-  password: z
-    .string()
-    .min(1, { message: 'Password is required' })
-    .min(8, { message: 'Password must be at least 8 characters' })
-    .max(100, { message: 'Password must be less than 100 characters' }),
-});
-
-const registerSchema = z.object({
-  email: z
-    .email({ message: 'Invalid email address' })
-    .min(1, { message: 'Email is required' }),
-  password: z
-    .string()
-    .min(1, { message: 'Password is required' })
-    .min(8, { message: 'Password must be at least 8 characters' })
-    .max(100, { message: 'Password must be less than 100 characters' }),
-  name: z
-    .string()
-    .min(1, { message: 'Name is required' })
-    .min(2, { message: 'Name must be at least 2 characters' })
-    .max(50, { message: 'Name must be less than 50 characters' }),
-});
-
-type LoginFormInputs = z.infer<typeof loginSchema>;
-type RegisterFormInputs = z.infer<typeof registerSchema>;
-
-const AuthForm: React.FC<
-  AuthFormProps<LoginFormInputs | RegisterFormInputs>
-> = ({
+const AuthForm = <T extends FieldValues>({
   title,
   onSubmit,
   fields,
   authType,
-}: AuthFormProps<LoginFormInputs | RegisterFormInputs>) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(authType === 'login' ? loginSchema : registerSchema),
-  });
-
+  register,
+  errors,
+}: AuthFormProps<T>) => {
   return (
     <section className="max-w-150 flex flex-col items-center justify-center mt-5 mx-3 p-4 border-2 border-gray-400 rounded-xl shadow-md shadow-indigo-950 sm:mt-15 sm:shadow-xl sm:w-8/12 sm:mx-auto">
       <h1 className="text-4xl font-bold">{title}</h1>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-10 mt-5 w-full"
-      >
+      <form onSubmit={onSubmit} className="flex flex-col gap-10 mt-5 w-full">
         {fields.map(
           ({ label, name, type = 'text', autocomplete, placeholder }) => (
             <FormField
-              key={name}
+              key={String(name)}
               label={label}
-              htmlFor={name}
-              error={errors?.[name]?.message}
+              htmlFor={String(name)}
+              error={String(errors?.[name]?.message)}
             >
               <Input
-                id={name}
+                id={String(name)}
                 type={type}
                 autoComplete={autocomplete}
                 placeholder={placeholder}
-                error={errors?.[name]?.message}
-                {...register(name)}
+                error={String(errors?.[name]?.message)}
+                // todo: Fix this any
+                {...register(name as any)}
               />
             </FormField>
           ),

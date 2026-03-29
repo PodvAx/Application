@@ -8,12 +8,10 @@ type Props = {
 
 const Logo: React.FC<Props> = ({ size = 20, className = '' }: Props) => {
   const sizeClasses: Record<number, string> = {
-    5: 'w-5 h-5 md:w-7 md:h-7 lg:w-10 lg:h-10',
-    10: 'w-10 h-10 md:w-15 md:h-15 lg:w-20 lg:h-20',
-    15: 'w-15 h-15 md:w-20 md:h-20 lg:w-25 lg:h-25',
-    20: 'w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30',
-    25: 'w-25 h-25 md:w-30 md:h-30 lg:w-35 lg:h-35',
-    30: 'w-30 h-30 md:w-35 md:h-35 lg:w-40 lg:h-40',
+    10: 'w-10 h-10 sm:w-20 sm:h-20 lg:w-25 lg:h-25',
+    20: 'w-20 h-20 sm:w-25 sm:h-25 lg:w-30 lg:h-30',
+    25: 'w-25 h-25 sm:w-30 sm:h-30 lg:w-35 lg:h-35',
+    30: 'w-30 h-30 sm:w-35 sm:h-35 lg:w-40 lg:h-40',
     35: 'w-35 h-35',
     40: 'w-40 h-40',
   };

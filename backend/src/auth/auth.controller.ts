@@ -32,11 +32,11 @@ export class AuthController {
 
   @Post('activate')
   async activate(
-    @Query() query: ActivateQueryDto,
+    @Body() activationDto: ActivateQueryDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { accessToken, refreshToken } = await this.authService.activate(
-      query.token,
+      activationDto.token,
     );
 
     response.cookie('refreshToken', refreshToken, { httpOnly: true });
@@ -99,5 +99,12 @@ export class AuthController {
     );
 
     return { message: 'Your password successfully reset' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@CurrentUser('sub') userId: string) {
+    const user = await this.authService.getMe(userId);
+    return user;
   }
 }

@@ -1,17 +1,17 @@
-import js from "@eslint/js";
-import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import prettierConfig from "eslint-config-prettier";
-import prettierPlugin from "eslint-plugin-prettier";
-import tseslint from "typescript-eslint";
-import { defineConfig, globalIgnores } from "eslint/config";
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import prettierConfig from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
+import tseslint from 'typescript-eslint';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.{ts,tsx}"],
-    plugin: {
+    files: ['**/*.{ts,tsx}'],
+    plugins: {
       prettier: prettierPlugin,
     },
     extends: [
@@ -26,7 +26,8 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      "prettier/prettier": "error",
+      'prettier/prettier': 'error',
+      'no-console': 'warn',
     },
   },
 ]);
