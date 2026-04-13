@@ -8,6 +8,7 @@ export const button = cva(
         primary: 'text-xl font-semibold text-white bg-indigo-600',
         secondary: 'text-white bg-indigo-600',
         tertiary: 'bg-transparent',
+        green: 'text-white bg-green-600 hover:bg-green-700 active:bg-green-500',
       },
       disabled: {
         false: null,

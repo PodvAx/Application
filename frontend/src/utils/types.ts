@@ -1,8 +1,10 @@
 import type z from 'zod';
 import type { loginSchema, registerSchema } from '../utils/zod.schemas';
 import type { IconType } from 'react-icons';
+import { button } from '../components/variants/button';
+import type { VariantProps } from 'class-variance-authority';
 
-export type BtnVariantType = 'primary' | 'secondary' | 'tertiary';
+export type BtnVariantType = VariantProps<typeof button>['variant'];
 
 export interface NavItemProps {
   to: string;
@@ -50,4 +52,14 @@ export type UserDataType = {
   name: string;
   isVerifiedEmail?: boolean;
   password?: string;
+};
+
+export type MyEvent = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  creatorId: string;
+  capacity?: number;
 };
